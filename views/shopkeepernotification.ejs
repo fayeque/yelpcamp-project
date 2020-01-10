@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>YelpCamp</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/stylesheets/main.css">
+    </head>
+	<style>
+		.column{
+		margin-left:50px;
+		}
+	</style>
+    <body>
+		<h1>All notifications </h1>
+	<div class="row">
+		<% notification.forEach(function(notification){ %>
+			<div class="column">
+				<p> <%= notification.username %> </p>
+				<p> <%= notification.prname %>  </p>
+				<p> <%= notification.prprice %>  </p>
+				<form action="/user/<%= notification.userid %>/usernotificationid/<%= notification.usernotificationid %>" method="POST">
+					<input type="number" name="prprice" placeholder="enter your price">
+					<input type="number" name="stock" placeholder="enter the quantity in stock">
+					<button class="btn btn-primary">submit</button>
+				</form>
+				
+		</div>
+		<br>
+		<% }) %>
+	</div>
+
+	</body>
+</html>
