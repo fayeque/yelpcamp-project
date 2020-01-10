@@ -1,4 +1,5 @@
 var express          = require("express"),
+	PORT			= process.env.PORT||3000,
     app              = express(),
 	twilio 			=  require('twilio')('AC7e437fe931c5e34834df385ac5c4a12c','ee8573663dde1b468be4990959f4d122'),
     bodyParser       = require("body-parser"),
@@ -451,6 +452,6 @@ app.get("/shopkeeperlogout",function(req,res){
 // function escapeRegex(text) {
 //     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "p");
 // };
-app.listen(3000,function(req,res){
+app.listen(PORT,function(req,res){
 	console.log("local market server strated")
 })
