@@ -332,15 +332,15 @@ app.get("/search",function(req,res){
 			}
 		});
 
-// var numbers=['+917031255039','+917797571993'];
-// for(var i=0;i<numbers.length;i++){
-// twilio.messages
-//       .create({
-//          from: 'whatsapp:+14155238886',
-// 		 to: 'whatsapp:' + numbers[i],
-//          body: 'Hello there! You have just received a notification.Go to: https://fayeque123new-ozyeh.run.goorm.io/shopkeeper'
-//         }).then(message => console.log(message.sid));
-// }
+var numbers=['+917797571993','+917903084194'];
+for(var i=0;i<numbers.length;i++){
+twilio.messages
+      .create({
+         from: 'whatsapp:+14155238886',
+		 to: 'whatsapp:' + numbers[i],
+         body: 'Hello there! You have just received a notification.Go to: https://fayeque123new-ozyeh.run.goorm.io/shopkeeper'
+        }).then(message => console.log(message.sid));
+}
 // Promise.all(
 //   numbers.map(number => {
 //     return twilio.messages.create({
