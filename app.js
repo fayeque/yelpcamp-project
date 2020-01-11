@@ -338,7 +338,7 @@ twilio.messages
       .create({
          from: 'whatsapp:+14155238886',
 		 to: 'whatsapp:' + numbers[i],
-         body: 'Hello there! You have just received a notification.Go to: https://fayeque123new-ozyeh.run.goorm.io/shopkeeper'
+         body: 'Hello there! You have just received a notification.Go to: http://locallymkt.herokuapp.com/'
         }).then(message => console.log(message.sid));
 }
 // Promise.all(
