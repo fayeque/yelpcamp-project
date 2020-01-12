@@ -3,7 +3,7 @@ var passportLocalMongoose = require("passport-local-mongoose");
 var shopkeeperSchema=mongoose.Schema({
 	username:{type:Number,required:true},
 	name:{type:String,required:true},
-	email:{type:String,required:true},
+	email:String,
 	notifications: [
     {
    		type: mongoose.Schema.Types.ObjectId,

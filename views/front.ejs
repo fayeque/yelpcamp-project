@@ -75,7 +75,7 @@
 		.main
 		{
 			position: absolute;
-			top: 20%;
+			top: 40%;
 			left: 50%;
 			transform: translate(-50%,-50%);
 		}
@@ -125,12 +125,12 @@
   <%= success %>
 		</div>
 		<% } %>
-		</div>
 		<% if(error && error.length>0){ %>
 		<div class="alert alert-danger" role="alert">
 			<%= error %>
 </div>
 		<% } %>
+		</div>
 	<div class="main">
 		<form action="/search" method="GET">
 					<input class="search-txt" type="text" name="search" placeholder="Search anything you want...">
@@ -146,10 +146,10 @@
 		</form>
 
 		</div>
-		<form action="/twilio" method="POST">
+		<!-- <form action="/twilio" method="POST">
 			<button>
 				Twilio
 			</button>
-		</form>
+		</form> -->
 </body>
 </html>

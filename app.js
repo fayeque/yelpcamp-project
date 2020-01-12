@@ -13,7 +13,8 @@ var express          = require("express"),
 	Notification	= require("./models/notification"),
 	Usernotification	= require("./models/usernotification"),
 	Product			 = require("./models/product"),
-	request			=require("request");
+	request			=require("request"),
+	forever        =require("forever");
 
 const cheerio = require('cheerio');
 // mongoose.connect("mongodb://localhost/local_market",  {useNewUrlParser: true});
@@ -64,14 +65,22 @@ passport.deserializeUser(function(user,done){
 app.use(async function(req,res,next){
 	res.locals.currentShopkeeper = req.user;
 	res.locals.currentUser = req.user;
-	  // if(req.user) {
-	  // try {
-	  // let shopkeeper = await Shopkeeper.find({}).populate('notifications', null, { isRead: false }).exec();
-	  // res.locals.notifications = Shopkeeper.notifications.reverse();
-	  // } catch(err) {
-	  // console.log(err.message);
-	  // }
-	  // }
+ // if(req.user) {
+ //    try {
+ //      let shopkeeper = await Shopkeeper.findById(req.user._id).populate('notifications', null, { isRead: false }).exec();
+ //      res.locals.notifications = shopkeeper.notifications;
+ //    } catch(err) {
+ //      console.log(err.message);
+ //    }
+ //   }
+// if(res.locals.currentUser) {
+//     try {
+//       let user = await User.findById(req.user._id).populate('notifications', null, { isRead: false }).exec();
+//       res.locals.usernotifications = user.notifications;
+//     } catch(err) {
+//       console.log(err.message);
+//     }
+//    }
 	res.locals.error=req.flash("error");
 	res.locals.success=req.flash("success");
 	next();
@@ -96,7 +105,50 @@ app.get("/",function(req,res){
 			}
 			else
 				{
-					res.render("front",{notification:found.notifications});
+					// console.log(found);
+					Shopkeeper.find({},function(err,allSk){
+				if(err)
+				{
+					console.log(err);
+				}
+				else
+				{
+					var i=allSk.length;
+					var p=found.followers.length;
+					// console.log(allSk[i]);
+					// console.log(allSk.length);
+					// console.log(found.followers.length);
+					if(allSk.length != found.followers.length){
+						var z=0;
+						// console.log(found.followers.length);
+						 allSk.forEach(function(allsks){
+							 z++;
+					// console.log(allsks._id);
+							 // console.log(z);
+							 if(z===i){
+								 // console.log(z);
+								 // console.log(allSk._id);
+								 found.followers.push(allsks._id);
+								 found.save();
+								 // console.log(found);
+							 }
+						
+					// console.log(user);
+					 })
+					}
+					
+					// res.render("front",{notification:found.notifications});
+				}
+			});
+		}
+	});
+		User.findById(req.user._id).populate("notifications",null, {isRead:false}).exec(function(err,user){
+			if(err){
+				console.log(err);
+			}
+			else
+				{
+					res.render("front",{notification:user.notifications});
 				}
 		})
 	}
@@ -157,7 +209,7 @@ app.post("/register",function(req,res){
 			{
 				console.log(err);
 				req.flash("error",err.message);
-				res.redirect("/register");
+				res.redirect("back");
 	 		}
 	 	passport.authenticate("user")(req,res,function(){
 			req.flash("success","Successfully registered and logged in");
@@ -170,9 +222,9 @@ app.post("/register",function(req,res){
 			else
 				{
 					allSk.forEach(function(allsks){
-						console.log(allsks._id);
+						// console.log(allsks._id);
 						user.followers.push(allsks._id);
-						console.log(user);
+						// console.log(user);
 					})
 					
 					user.save();
@@ -199,8 +251,8 @@ app.post("/shopkeeperregister",function(req,res){
 	 		}
 	 	passport.authenticate("shopkeeper")(req,res,function(){
 			// console.log(err.message);
-			// req.flash("success","Successfully registered and logged in");
-			console.log(req.user);
+			req.flash("success","Successfully registered and logged in");
+			// console.log(req.user);
 	 		res.redirect("/shopkeeperloggedin");
 	 	});
 	 });
@@ -215,8 +267,8 @@ app.get("/shopkeeperlogin",function(req,res){
 	res.render("shopkeeperlogin.ejs");
 })
 app.get("/error",function(req,res){
-	req.flash("error","Mobile no. or password is incorrect")
-		res.redirect("/login");
+	req.flash("error","Mobile no. or password is incorrect");
+		res.redirect("/userlogin");
 });
 app.post("/login",passport.authenticate("user",
 	{
@@ -227,7 +279,7 @@ app.post("/login",passport.authenticate("user",
 	}),function(req,res){
 });
 app.get("/shopkeeperloggedin",function(req,res){
-	Shopkeeper.findById(req.user._id,function(err,foundsh){
+	Shopkeeper.findById(req.user._id).populate("notifications",null,{isRead:false}).exec(function(err,foundsh){
 		if(err){
 			console.log(err);
 		}
@@ -237,12 +289,16 @@ app.get("/shopkeeperloggedin",function(req,res){
 			}
 	})
 })
+app.get("/shopkeepererror",function(req,res){
+	req.flash("error","Mobile no. or password is incorrect");
+	res.redirect("/shopkeeperlogin");
+})
 app.post("/shopkeeperlogin",passport.authenticate("shopkeeper",
 	{
 		
 		 successRedirect:"/shopkeeperloggedin",
-	// req.flash("success","successfully logged in");
-		failureRedirect:"/shopkeeperlogin"
+	// successFlash("success","successfully logged in"),
+		failureRedirect:"/shopkeepererror"
 	}),function(req,res){
 });
 
@@ -252,12 +308,12 @@ app.post("/shopkeeperlogin",passport.authenticate("shopkeeper",
 app.get("/search",function(req,res){
 	var url=req.query.search;
 		var n=url.search(/http/i)
-		console.log(n);
+		// console.log(n);
 	url=url.slice(n);
 	var usernotificationid="";
 	// url=url.replace(/\w{5}/,"");
 		// console.log(regex);
-	console.log(url);
+	// console.log(url);
 	request(url,function(err,response,html){
 		const $ = cheerio.load(html);
 		const pr_name=$("._35KyD6");
@@ -267,20 +323,21 @@ app.get("/search",function(req,res){
 		var pname ='"'+pr_name_text+'"';
 		
 		//var pname="Vu";
-		console.log(pname);
+		// console.log(pname);
 		// console.log(typeof(pname));
-		console.log(pr_name_text);
+		// console.log(pr_name_text);
 		User.findById(req.user._id).populate('followers').exec(function(err,user){
 			if(err){
 				console.log(err);
 				res.redirect("back");
 			}
 			else{
-				console.log(user);
+				// console.log(user);
 		var usernotification={
 		isAvailable:"",
 		pprice:"",
 		stock:"",
+		prname:pr_name_text
 		}
 		Usernotification.create(usernotification,function(err,creatednotify){
 			if(err){
@@ -293,7 +350,7 @@ app.get("/search",function(req,res){
 					creatednotify.save();
 					// user.notifications.push(creatednotify);
 					// user.save();
-					console.log(creatednotify);
+					// console.log(creatednotify);
 					// usernotificationid=creatednotify._id;
 					// console.log(usernotificationid);
 		var newNotification = {
@@ -303,7 +360,7 @@ app.get("/search",function(req,res){
 		userid: req.user._id,
 		usernotificationid:creatednotify._id
 		}
-		console.log(newNotification);
+		// console.log(newNotification);
 		// user.notifications.push(newNotification);
 		for(const follower of user.followers){
 			console.log(follower);
@@ -316,14 +373,14 @@ app.get("/search",function(req,res){
 						console.log(creatednoti);
 						follower.notifications.push(creatednoti);
 						follower.save();
-						console.log(creatednoti);
+						// console.log(creatednoti);
 						
 					}
 			})
 		}
 				}
 		});
-		
+				req.flash("success","Your order sent to the shopkeepers");
 				res.redirect("/");
 			// console.log(follower.notification[0]);
 			// 	console.log(follower.notification[0]);
@@ -331,16 +388,36 @@ app.get("/search",function(req,res){
 			
 			}
 		});
-
-var numbers=['+917797571993','+917903084194'];
-for(var i=0;i<numbers.length;i++){
-twilio.messages
-      .create({
-         from: 'whatsapp:+14155238886',
-		 to: 'whatsapp:' + numbers[i],
-         body: 'Hello there! You have just received a notification.Go to: http://locallymkt.herokuapp.com/'
+var numbers=[];
+Shopkeeper.find({},function(err,allsh){
+	if(err){
+		console.log(err);
+	}
+	else{
+		allsh.forEach(function(allSh){
+			numbers.push(allSh.username);
+		})
+		console.log(numbers[1]);
+		for(var i=0;i<numbers.length;i++){
+		twilio.messages
+		  	.create({
+        		 from: 'whatsapp:+14155238886',
+				 to: 'whatsapp:' + numbers[i],
+       			 body: 'Hello there! You have just received a notification.Go to: http://locallymkt.herokuapp.com/'
         }).then(message => console.log(message.sid));
 }
+		
+	}
+})
+// var numbers=['+917797571993','+917903084194'];
+// for(var i=0;i<numbers.length;i++){
+// twilio.messages
+//       .create({
+//          from: 'whatsapp:+14155238886',
+// 		 to: 'whatsapp:' + numbers[i],
+//          body: 'Hello there! You have just received a notification.Go to: http://locallymkt.herokuapp.com/'
+//         }).then(message => console.log(message.sid));
+// }
 // Promise.all(
 //   numbers.map(number => {
 //     return twilio.messages.create({
@@ -372,14 +449,14 @@ twilio.messages
 	
 });
 app.get("/shopkeepernotification",function(req,res){
-	Shopkeeper.findById(req.user._id).populate('notifications').exec(function(err,shopkeeper){
+	Shopkeeper.findById(req.user._id).populate('notifications', null, { isRead: false }).exec(function(err,shopkeeper){
 		if(err)
 			{
 				console.log(err);
 				res.redirect("back");
 			}
 		else{
-			console.log(shopkeeper);
+			// console.log(shopkeeper);
 			res.render("shopkeepernotification",{notification:shopkeeper.notifications});
 		}
 	})
@@ -387,7 +464,7 @@ app.get("/shopkeepernotification",function(req,res){
 });
 
 
-app.post("/user/:id/usernotificationid/:usernotificationid",function(req,res){
+app.post("/user/:id/usernotificationid/:usernotificationid/:notificationid",function(req,res){
 	var prprice=req.body.prprice;
 	var stock=req.body.stock;
 	var isAvailable="Yes";
@@ -405,19 +482,32 @@ app.post("/user/:id/usernotificationid/:usernotificationid",function(req,res){
 				foundnotification.shopkeeper.username=req.user.name;
 				// foundnotification.shopkeeper.username=req.user.name;
 				foundnotification.save();
-				console.log(foundnotification);
+				// console.log(foundnotification);
 				// res.redirect("/shopkeeperloggedin");
 	User.findById(req.params.id).populate("notifications").exec(function(err,updatinguser){
 		if(err){
 			console.log(err);
+			req.flash("error",err.message);
 			// res.redirect("back");
 		}
 		else
 			{
 				updatinguser.notifications.push(foundnotification);
 				updatinguser.save();
-				console.log(updatinguser);
-				res.redirect("/shopkeeperloggedin");
+				// console.log(updatinguser);
+				Notification.findById(req.params.notificationid,function(err,notify){
+					if(err){
+						console.log(err);
+					}
+					else{
+						// console.log(req.params.notificationid);
+						notify.isRead=true;
+						notify.save();
+						req.flash("success","Response send successfully to user");
+						res.redirect("/shopkeeperloggedin");
+					}
+				})
+				// res.redirect("/shopkeeperloggedin");
 				// res.render("front",{notification:updatinguser.notifications});
 			}
 	})
@@ -425,17 +515,33 @@ app.post("/user/:id/usernotificationid/:usernotificationid",function(req,res){
 	});
 });
 app.get("/usernotification",function(req,res){
-	User.findById(req.user._id).populate("notifications").exec(function(err,usernotification){
+	User.findById(req.user._id).populate("notifications",null,{isRead:false}).exec(function(err,usernotification){
 		if(err){
 			console.log(err);
 		}
 		else
-		{
+		{	
+			usernotification.notifications.forEach(function(eachnoti){
+				eachnoti.isRead=true;
+			eachnoti.save();
+			console.log(eachnoti);
+		});
 				res.render("usernotification",{notification:usernotification.notifications});
+				
 		}
 	})
 })
-
+app.get("/pastnotification",function(req,res){
+	User.findById(req.user._id).populate("notifications").exec(function(err,user){
+		if(err){
+			console.log(err);
+		}
+		else
+			{
+				res.render("pastnotification",{notification:user.notifications});
+			}
+	})
+})
 
 
 

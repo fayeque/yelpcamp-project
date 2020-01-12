@@ -5,6 +5,7 @@ var usernotificationSchema = new mongoose.Schema({
 	isAvailable:String,
 	pprice:String,
 	stock:Number,
+	prname:String,
 	customer:{
 		id:{
 			type: mongoose.Schema.Types.ObjectId,
